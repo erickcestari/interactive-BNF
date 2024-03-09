@@ -1,4 +1,4 @@
-import { Aux, con, ctr, dup, Net, nil, Pair, Tree, wires } from "./net.ts"
+import { Aux, con, ctr, dup, Net, nil, Pair, Tree } from "./net.ts"
 
 export type Tokens = {
   next(): string | undefined
@@ -6,7 +6,7 @@ export type Tokens = {
 }
 
 const rIdent = /^[a-zA-Z0-9_.'-]+$/
-const rToken = /\s*([{}()[\]*=]|[a-zA-Z0-9_.'-]+)\s*|(.)/g
+const rToken = /\s*(<|>|::=|\||"|\||'|!|#|\$|%|&|\(|\)|\*|\+|,|-|\.|\/|:|;|>|=|<|\?|@|\[|\\|]|\^|_|`|{|}|~|[a-zA-Z0-9_.-]+)\s*|(.)/g
 
 function lex(input: string): Tokens {
   const iter = _lex(input)
@@ -31,23 +31,24 @@ function* _lex(input: string) {
   return undefined
 }
 
-function parseTree(tokens: Tokens, wires: Record<string, Aux>): Tree {
+function parseTree(tokens: Tokens): Tree {
   const token = tokens.next()
+  console.log(token)
   switch (token) {
-    case "(": {
-      const node = con(parseTree(tokens, wires), parseTree(tokens, wires))
-      if (tokens.next() !== ")") throw new Error("expected )")
+    case "<": {
+      const node = con(parseTree(tokens), parseTree(tokens))
+      if (tokens.next() !== ">") throw new Error("expected >")
       return node
     }
     case "[": {
-      const node = dup(parseTree(tokens, wires), parseTree(tokens, wires))
+      const node = dup(parseTree(tokens), parseTree(tokens))
       if (tokens.next() !== "]") throw new Error("expected ]")
       return node
     }
     case "{": {
       const tag = +tokens.next()!
       if (isNaN(tag)) throw new Error("expected tag")
-      const node = ctr(tag, parseTree(tokens, wires), parseTree(tokens, wires))
+      const node = ctr(tag, parseTree(tokens), parseTree(tokens))
       if (tokens.next() !== "}") throw new Error("expected }")
       return node
     }
@@ -55,31 +56,27 @@ function parseTree(tokens: Tokens, wires: Record<string, Aux>): Tree {
       return nil
     }
     default: {
-      if (!token || !rIdent.test(token)) {
-        throw new Error("expected tree")
-      }
-      return wires[token]!
+      throw new Error("expected tree")
     }
   }
 }
 
 export function parseNet(input: string): Net {
   const tokens = lex(input)
-  const w = wires()
   const trees = []
   while (tokens.peek() && tokens.peek() !== "=") {
-    trees.push(parseTree(tokens, w))
+    trees.push(parseTree(tokens))
   }
   const pairs: Pair[] = []
   if (tokens.peek() === "=") {
-    if (!trees.length) parseTree(tokens, w)
+    if (!trees.length) parseTree(tokens)
     tokens.next()
-    pairs.push([trees.pop()!, parseTree(tokens, w)])
+    pairs.push([trees.pop()!, parseTree(tokens)])
   }
   while (tokens.peek()) {
-    const a = parseTree(tokens, w)
+    const a = parseTree(tokens)
     if (tokens.next() !== "=") throw new Error("expected =")
-    const b = parseTree(tokens, w)
+    const b = parseTree(tokens)
     pairs.push([a, b])
   }
   const unmatched = Object.keys(w)

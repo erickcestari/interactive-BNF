@@ -6,23 +6,26 @@ import { reduce } from "./net.ts"
 import { parseNet } from "./parse.ts"
 import { printNet } from "./print.ts"
 
+
 const initial = getInitialNet() ?? `
-out
-
-add = (
-  (((z i0) o0) ((o0 i1) o1))
-  ((z [i0 i1]) o1)
-)
-
-one = ((z (z o)) o)
-
-[one0 [one1 one2]] = one
-{2 add0 add1} = add
-
-add0 = ((one0 one1) two)
-add1 = ((two one2) three)
-
-out = three
+<syntax>         ::= <rule> | <rule> <syntax>
+<rule>           ::= <opt-whitespace> "<" <rule-name> ">" <opt-whitespace> "::=" <opt-whitespace> <expression> <line-end>
+<opt-whitespace> ::= " " <opt-whitespace> | ""
+<expression>     ::= <list> | <list> <opt-whitespace> "|" <opt-whitespace> <expression>
+<line-end>       ::= <opt-whitespace> <EOL> | <line-end> <line-end>
+<list>           ::= <term> | <term> <opt-whitespace> <list>
+<term>           ::= <literal> | "<" <rule-name> ">"
+<literal>        ::= '"' <text1> '"' | "'" <text2> "'"
+<text1>          ::= "" | <character1> <text1>
+<text2>          ::= "" | <character2> <text2>
+<character>      ::= <letter> | <digit> | <symbol>
+<letter>         ::= "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z" | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z"
+<digit>          ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+<symbol>         ::= "|" | " " | "!" | "#" | "$" | "%" | "&" | "(" | ")" | "*" | "+" | "," | "-" | "." | "/" | ":" | ";" | ">" | "=" | "<" | "?" | "@" | "[" | "\" | "]" | "^" | "_" | "\`" | "{" | "}" | "~"
+<character1>     ::= <character> | "'"
+<character2>     ::= <character> | '"'
+<rule-name>      ::= <letter> | <rule-name> <rule-char>
+<rule-char>      ::= <letter> | <digit> | "-"
 `.trimStart()
 
 const inputTextarea = document.getElementById("input") as HTMLTextAreaElement

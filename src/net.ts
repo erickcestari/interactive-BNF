@@ -26,21 +26,6 @@ export function wire(label: string): [Aux, Aux] {
   return [x, y]
 }
 
-export function wires(): Record<string, Aux> {
-  return new Proxy({}, {
-    get: (target: any, key) => {
-      if (key in target) {
-        const v = target[key]
-        delete target[key]
-        return v
-      }
-      const [a, b] = wire(key as string)
-      target[key] = b
-      return a
-    },
-  })
-}
-
 export type Pair = [Tree, Tree]
 
 export type Net = [Tree[], Pair[]]
