@@ -3,29 +3,18 @@
 import lzstring from "https://esm.sh/lz-string@1.4.4"
 import { concatHoriz, drawNet } from "./diagram.ts"
 import { reduce } from "./net.ts"
-import { parseNet } from "./parse.ts"
+import { parseBnf } from "./parse.ts"
 import { printNet } from "./print.ts"
 
 
 const initial = getInitialNet() ?? `
-<syntax>         ::= <rule> | <rule> <syntax>
-<rule>           ::= <opt-whitespace> "<" <rule-name> ">" <opt-whitespace> "::=" <opt-whitespace> <expression> <line-end>
-<opt-whitespace> ::= " " <opt-whitespace> | ""
-<expression>     ::= <list> | <list> <opt-whitespace> "|" <opt-whitespace> <expression>
-<line-end>       ::= <opt-whitespace> <EOL> | <line-end> <line-end>
-<list>           ::= <term> | <term> <opt-whitespace> <list>
-<term>           ::= <literal> | "<" <rule-name> ">"
-<literal>        ::= '"' <text1> '"' | "'" <text2> "'"
-<text1>          ::= "" | <character1> <text1>
-<text2>          ::= "" | <character2> <text2>
-<character>      ::= <letter> | <digit> | <symbol>
-<letter>         ::= "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z" | "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z"
-<digit>          ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
-<symbol>         ::= "|" | " " | "!" | "#" | "$" | "%" | "&" | "(" | ")" | "*" | "+" | "," | "-" | "." | "/" | ":" | ";" | ">" | "=" | "<" | "?" | "@" | "[" | "\" | "]" | "^" | "_" | "\`" | "{" | "}" | "~"
-<character1>     ::= <character> | "'"
-<character2>     ::= <character> | '"'
-<rule-name>      ::= <letter> | <rule-name> <rule-char>
-<rule-char>      ::= <letter> | <digit> | "-"
+<postal-address> ::= <name-part> <street-address> <zip-part>
+<name-part> ::= <personal-part> <last-name> <opt-suffix-part> <EOL> | <personal-part> <name-part>
+<personal-part> ::= <first-name> | <initial> "."
+<street-address> ::= <house-num> <street-name> <opt-apt-num> <EOL>
+<zip-part> ::= <town-name> "," <state-code> <ZIP-code> <EOL>
+<opt-suffix-part> ::= "Sr." | "Jr." | <roman-numeral> | ""
+<opt-apt-num> ::= "Apt" <apt-num> | ""
 `.trimStart()
 
 const inputTextarea = document.getElementById("input") as HTMLTextAreaElement
@@ -41,7 +30,8 @@ exec()
 function exec() {
   try {
     let output = ""
-    const net = parseNet(inputTextarea.value)
+    const bnf = parseBnf(inputTextarea.value)
+    console.log(bnf)
     let steps = 0
     for (; steps < 1000; steps++) {
       output += concatHoriz(drawNet(net), [...printNet(net), ""]).join("\n") + "\n\n"
