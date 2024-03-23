@@ -12,7 +12,6 @@ const rToken = /\s*(<|>|::=|\||"|\||'|!|#|\$|%|&|\(|\)|\*|\+|,|-|\.|\/|:|;|>|=|<
 
 function lex(input: string): Tokens {
   const lexInput = input.split("\n").join("🪨");
-  console.log(lexInput)
   const iter = _lex(lexInput);
   let next = iter.next().value;
   return {
@@ -74,7 +73,6 @@ export function parseBnf(input: string): Tree[] {
   while (tokens.peek() && tokens.peek() !== "=") {
     trees.push(parseTree(tokens));
   }
-  console.log(trees)
 
   return trees
 }
