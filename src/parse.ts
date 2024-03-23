@@ -8,10 +8,12 @@ interface Tree {
   children?: Tree[];
 }
 
-const rToken = /\s*(<|>|::=|\||"|\||'|!|#|\$|%|&|\(|\)|\*|\+|,|-|\.|\/|:|;|>|=|<|\?|@|\[|\\|]|\^|_|`|{|}|~|[a-zA-Z0-9_.-]+)\s*|(.)/g;
+const rToken = /\s*(<|>|::=|\||"|\||'|!|#|\$|%|&|\(|\)|\*|\+|,|-|\.|\/|:|;|>|=|<|🪨|\?|@|\[|\\|]|\^|_|`|{|}|~|[a-zA-Z0-9_.-]+|\n)\s*|(.)/g;
 
 function lex(input: string): Tokens {
-  const iter = _lex(input);
+  const lexInput = input.split("\n").join("🪨");
+  console.log(lexInput)
+  const iter = _lex(lexInput);
   let next = iter.next().value;
   return {
     next() {
@@ -36,13 +38,24 @@ function* _lex(input: string) {
 function parseTree(tokens: Tokens): Tree {
   const token = tokens.next()
   switch (token) {
+    case "🪨": {
+      return parseTree(tokens);
+    }
+    case "|": {
+      return {name: token}
+    }
+    case `"`: {
+      const name = tokens.next()!;
+      if (tokens.next() !== `"` && name !== `"`) throw new Error("expected \"");
+      return { name };
+    }
     case "<": {
       const name = tokens.next()!;
       if (tokens.next() !== ">") throw new Error("expected >");
       if (tokens.peek() === "::=") {
         tokens.next();
         const children: Tree[] = []
-        while (tokens.peek() && tokens.peek() !== "|") {
+        while (tokens.peek() && tokens.peek() !== "🪨") {
           children.push(parseTree(tokens));
         }
         return { name, children };
@@ -59,9 +72,9 @@ export function parseBnf(input: string): Tree[] {
   const tokens = lex(input);
   const trees: Tree[] = []
   while (tokens.peek() && tokens.peek() !== "=") {
-    console.log(parseTree(tokens));
     trees.push(parseTree(tokens));
   }
+  console.log(trees)
 
   return trees
 }
